@@ -22,11 +22,11 @@ def generate_launch_description():
         name='base_link_to_livox_frame',
         arguments=['0.1634', '0', '0.116', '0', '0.0871', '0', '0.9962', 'base_link', 'livox_frame']
     )
-    static_world_to_map_node =  Node(
+    static_map_to_odom_node =  Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             name='world_to_map',
-            arguments=['0', '0', '0', '0', '0', '0', '1', 'world', 'map']
+            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'fast_lio_odom']
     )
     
     static_base_link_to_fake_laser =  Node(
@@ -77,9 +77,9 @@ def generate_launch_description():
     ld.add_action(declare_config_path_cmd)
     ld.add_action(declare_rviz_cmd)
     ld.add_action(declare_rviz_config_path_cmd)
-    ld.add_action(static_base_link_to_livox_frame)
-    ld.add_action(static_world_to_map_node)
-    ld.add_action(static_base_link_to_fake_laser)
+    ld.add_action(static_map_to_odom_node)
+    # ld.add_action(static_base_link_to_livox_frame)
+    # ld.add_action(static_base_link_to_fake_laser)
 
     ld.add_action(fast_lio_node)
     ld.add_action(rviz_node)
