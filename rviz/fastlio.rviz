@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /TF1
+        - /CloudRegistered1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz_common/Selection
@@ -35,31 +36,49 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_footprint:
+        FL_calf:
+          Value: true
+        FL_foot:
+          Value: true
+        FL_hip:
+          Value: true
+        FL_thigh:
+          Value: true
+        FR_calf:
+          Value: true
+        FR_foot:
+          Value: true
+        FR_hip:
+          Value: true
+        FR_thigh:
+          Value: true
+        RL_calf:
+          Value: true
+        RL_foot:
+          Value: true
+        RL_hip:
+          Value: true
+        RL_thigh:
+          Value: true
+        RR_calf:
+          Value: true
+        RR_foot:
+          Value: true
+        RR_hip:
+          Value: true
+        RR_thigh:
           Value: true
         base_link:
-          Value: true
-        camera_link:
-          Value: true
-        camera_link_optical:
-          Value: true
-        caster_wheel:
-          Value: true
-        chassis:
-          Value: true
-        face_link:
           Value: true
         fast_lio_odom:
           Value: true
         imu_link:
           Value: true
-        left_wheel:
-          Value: true
-        livox_frame:
-          Value: true
         map:
           Value: true
-        right_wheel:
+        trunk:
+          Value: true
+        utlidar_lidar:
           Value: true
       Marker Scale: 5
       Name: TF
@@ -70,23 +89,31 @@ Visualization Manager:
         map:
           fast_lio_odom:
             base_link:
-              base_footprint:
+              trunk:
+                FL_hip:
+                  FL_thigh:
+                    FL_calf:
+                      FL_foot:
+                        {}
+                FR_hip:
+                  FR_thigh:
+                    FR_calf:
+                      FR_foot:
+                        {}
+                RL_hip:
+                  RL_thigh:
+                    RL_calf:
+                      RL_foot:
+                        {}
+                RR_hip:
+                  RR_thigh:
+                    RR_calf:
+                      RR_foot:
+                        {}
                 imu_link:
                   {}
-                livox_frame:
+                utlidar_lidar:
                   {}
-              chassis:
-                camera_link:
-                  camera_link_optical:
-                    {}
-                caster_wheel:
-                  {}
-                face_link:
-                  {}
-              left_wheel:
-                {}
-              right_wheel:
-                {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -159,8 +186,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 1.8344991207122803
-        Min Value: -0.0020781257189810276
+        Max Value: 24.38776969909668
+        Min Value: -8.18811321258545
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -186,7 +213,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /cloud_registered
+        Value: /Laser_map
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -227,8 +254,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 1.8518505096435547
-        Min Value: -0.002351072384044528
+        Max Value: 24.38776969909668
+        Min Value: -8.18811321258545
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -301,7 +328,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 78.040283203125
+      Distance: 233.12319946289062
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -337,5 +364,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1453
-  X: 368
-  Y: 104
+  X: 228
+  Y: 43
