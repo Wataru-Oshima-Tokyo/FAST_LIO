@@ -7,7 +7,6 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        map_file_path: "/home/user/humble_ws/src/ig_lio/maps/multiple_floor.pcd"
         odom_frame: fast_lio_odom
         robot_frame: base_link
         common:
@@ -36,7 +35,8 @@
             extrinsic_R: [ 0.9848,  0.,  .1736,
                                         0.,  1.,  0.,
                                         -0.1736,  0.,  0.9848 ]
-
+            map_file_path: /home/user/humble_ws/src/3d_nav_kit/navigation_3d/maps #do nout put '/' at the end
+            map_name: sh
         publish:
             path_en: true                # true: publish Path
             effect_map_en: false         # true: publish Effects
