@@ -888,8 +888,10 @@ public:
         this->get_parameter_or<std::string>("odom_frame", odom_frame_, "fast_lio_odom");
         this->get_parameter_or<std::string>("robot_frame", robot_frame_, "base_link");
 
-        RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
         map_file_path += "/" + map_name + ".pcd";
+        RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
+        RCLCPP_INFO(this->get_logger(), "map name :%s", map_name.c_str());
+
         path.header.stamp = this->get_clock()->now();
         path.header.frame_id =odom_frame_;
 
