@@ -19,20 +19,21 @@ def launch_setup(context, *args, **kwargs):
     rviz_use = LaunchConfiguration('rviz')
     rviz_cfg = LaunchConfiguration('rviz_cfg')
     map_name = LaunchConfiguration('map_name').perform(context)
+    map_location = LaunchConfiguration('map_location').perform(context)
 
 
     static_map_to_odom_node =  Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             name='world_to_map',
-            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'fast_lio_odom']
+            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'lio_odom']
     )
 
     fast_lio_node = Node(
         package='fast_lio',
         executable='fastlio_mapping',
         parameters=[config_path,
-                    {'use_sim_time': use_sim_time}, {'mapping.map_name': map_name}],
+                    {'use_sim_time': use_sim_time}, {'mapping.map_name': map_name}, {'mapping.map_location': map_location}],
         output='screen'
     )
     rviz_node = Node(
@@ -76,6 +77,10 @@ def generate_launch_description():
         'map_name', default_value='sh',
         description='Map name'
     )
+    declare_map_location_arg = DeclareLaunchArgument(
+        'map_location', default_value='map',
+        description='Map location'
+    )
 
     return LaunchDescription([
         declare_use_sim_time_cmd,
@@ -83,6 +88,7 @@ def generate_launch_description():
         declare_rviz_cmd,
         declare_rviz_config_path_cmd,
         declare_map_name_arg,
+        declare_map_location_arg,
         OpaqueFunction(function=launch_setup)
     ])
  

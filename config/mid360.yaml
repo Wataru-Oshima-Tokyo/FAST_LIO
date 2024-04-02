@@ -36,7 +36,6 @@
             extrinsic_R: [ 1., 0., 0.,
                             0., 1., 0.,
                             0., 0., 1.]
-            map_file_path: /home/user/humble_ws/src/3d_nav_kit/nav_common_pkg/map_handler/maps #do nout put '/' at the end
 
         publish:
             path_en: true                # true: publish Path
