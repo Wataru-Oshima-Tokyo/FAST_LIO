@@ -8,7 +8,7 @@
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
 
-        odom_frame: fast_lio_odom
+        odom_frame: lio_odom
         robot_frame: base_link
         common:
             lid_topic:  "/livox/lidar_custom"
