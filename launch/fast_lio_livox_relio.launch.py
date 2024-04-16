@@ -40,20 +40,22 @@ def launch_setup(context, *args, **kwargs):
         parameters=[reloc_param_path],  # Pass the parameter file path directly
     )
 
-    ground_removal_node = Node(
-        package="pointcloud_handler",
-        executable="filter_pointcloud",
-        name="ground_removal_node",
-        respawn=True,
-        output="screen",
-        arguments=['--ros-args', '--log-level', 'WARN'],
-        parameters=[
-            {"target_topic": "utlidar/cloud"},
-            {"min_height": -0.3},
-            {"max_height": 2.0},
-            {"threshold": 0.1}
-        ]
-    )
+    # ground_removal_node = Node(
+    #     package="pointcloud_handler",
+    #     executable="filter_pointcloud",
+    #     name="ground_removal_node",
+    #     respawn=True,
+    #     output="screen",
+    #     # arguments=['--ros-args', '--log-level', 'WARN'],
+    #     parameters=[
+    #         {"target_topic": "utlidar/cloud"},
+    #         {"target_frame": "utlidar_lidar"},
+    #         {"robot_frame": "trunk"},
+    #         {"min_height": -0.3},
+    #         {"max_height": 2.0},
+    #         {"threshold": 0.1}
+    #     ]
+    # )
     
     print(config_path)
     static_map_to_odom_node =  Node(
@@ -74,7 +76,7 @@ def launch_setup(context, *args, **kwargs):
         lio_relocalization_node,
         lio_tf_fusion_node,
         fast_lio_node,
-        ground_removal_node
+        # ground_removal_node
     ]
 
 def generate_launch_description():

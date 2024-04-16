@@ -57,6 +57,9 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
@@ -85,7 +88,7 @@ mutex mtx_buffer;
 condition_variable sig_buffer;
 
 string root_dir = ROOT_DIR;
-string map_file_path, lid_topic, imu_topic, odom_frame_, robot_frame_, map_name;
+string map_file_path, lid_topic, imu_topic, odom_frame_, robot_frame_, map_name,map_frame_;
 
 double res_mean_last = 0.05, total_residual = 0.0;
 double last_timestamp_lidar = 0, last_timestamp_imu = -1.0;
@@ -636,7 +639,34 @@ void set_posestamp(T & out)
     
 }
 
-void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped, std::unique_ptr<tf2_ros::TransformBroadcaster> & tf_br)
+void publish_odom_To_map(
+    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pbu_odom,
+    std::unique_ptr<tf2_ros::Buffer>& tf_b ){
+    nav_msgs::msg::Odometry odom_transformed;
+    geometry_msgs::msg::TransformStamped transform_stamped;
+    geometry_msgs::msg::PoseStamped odom_pose;
+    odom_pose.pose = odomAftMapped.pose.pose;
+    odom_pose.header = odomAftMapped.header;
+    geometry_msgs::msg::PoseStamped map_pose;
+    try {
+        transform_stamped = tf_b->lookupTransform(map_frame_, odom_pose.header.frame_id,
+                                                    odom_pose.header.stamp, rclcpp::Duration::from_seconds(1.0));
+        tf2::doTransform(odom_pose, map_pose, transform_stamped);
+    } catch (tf2::TransformException &ex) {
+        // RCLCPP_WARN(this->get_logger(), "Could not transform cloud: %s", ex.what());
+        return;
+    }
+    // Set the header of the transformed odometry message
+    odom_transformed.header.stamp = odomAftMapped.header.stamp;
+    odom_transformed.header.frame_id = map_frame_;
+    odom_transformed.pose.pose = map_pose.pose;
+    pbu_odom->publish(odom_transformed);
+}
+
+
+void publish_odometry(
+    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped, 
+    std::unique_ptr<tf2_ros::TransformBroadcaster> & tf_br)
 {
     odomAftMapped.header.frame_id = odom_frame_;
     odomAftMapped.child_frame_id = robot_frame_;
@@ -807,7 +837,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
 class LaserMappingNode : public rclcpp::Node
 {
 public:
-    LaserMappingNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : Node("laser_mapping", options)
+    LaserMappingNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : Node("laser_mapping", options) 
     {
         this->declare_parameter<bool>("publish.path_en", true);
         this->declare_parameter<bool>("publish.effect_map_en", false);
@@ -843,6 +873,7 @@ public:
         this->declare_parameter<bool>("mapping.extrinsic_est_en", true);
         this->declare_parameter<bool>("pcd_save.pcd_save_en", false);
         this->declare_parameter<int>("pcd_save.interval", -1);
+        this->declare_parameter<std::string>("map_frame", "map");
         this->declare_parameter<std::string>("odom_frame", "fast_lio_odom");
         this->declare_parameter<std::string>("robot_frame", "base_link");
         
@@ -887,6 +918,7 @@ public:
         this->get_parameter_or<vector<double>>("mapping.extrinsic_R", extrinR, vector<double>());
         this->get_parameter_or<std::string>("odom_frame", odom_frame_, "fast_lio_odom");
         this->get_parameter_or<std::string>("robot_frame", robot_frame_, "base_link");
+        this->get_parameter_or<std::string>("map_frame", map_frame_, "map");
 
         map_file_path += "/" + map_name + ".pcd";
         RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
@@ -952,8 +984,11 @@ public:
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
         pubLaserCloudMap_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 20);
         pubOdomAftMapped_ = this->create_publisher<nav_msgs::msg::Odometry>("/lio/odometry", 20);
+        pubOdomToMap_ = this->create_publisher<nav_msgs::msg::Odometry>("/lio/odom_to_map", 20);
         pubPath_ = this->create_publisher<nav_msgs::msg::Path>("/lio/path", 20);
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+        tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
         //------------------------------------------------------------------------------------------------------
         auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0));
@@ -1082,6 +1117,7 @@ private:
 
             /******* Publish odometry *******/
             publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
+            publish_odom_To_map(pubOdomToMap_, tf_buffer_);
 
             /*** add the feature points to map kdtree ***/
             t3 = omp_get_wtime();
@@ -1154,12 +1190,15 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudEffect_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomToMap_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_pcl_pc_;
     rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_pcl_livox_;
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr map_pub_timer_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr map_save_srv_;
