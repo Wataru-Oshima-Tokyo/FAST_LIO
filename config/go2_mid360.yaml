@@ -7,7 +7,7 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        odom_frame: fast_lio_odom
+        odom_frame: lio_odom
         robot_frame: base_link
         common:
             lid_topic:  "/livox/lidar_custom"
@@ -33,10 +33,9 @@
             extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
             extrinsic_T: [0.1634, 0., 0.116 ]
             extrinsic_R: [ 0.9848,  0.,  .1736,
-                                        0.,  1.,  0.,
-                                        -0.1736,  0.,  0.9848 ]
-            map_file_path: /home/user/humble_ws/src/3d_nav_kit/navigation_3d/maps #do nout put '/' at the end
-            map_name: sh
+                            0.,  1.,  0.,
+                            -0.1736,  0.,  0.9848 ]
+
         publish:
             path_en: true                # true: publish Path
             effect_map_en: false         # true: publish Effects

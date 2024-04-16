@@ -15,13 +15,14 @@ def launch_setup(context, *args, **kwargs):
 
 
     use_sim_time = LaunchConfiguration('use_sim_time')
-    config_path = LaunchConfiguration('config_path')
+    config_path = LaunchConfiguration('config_path').perform(context)
     rviz_use = LaunchConfiguration('rviz')
     rviz_cfg = LaunchConfiguration('rviz_cfg')
     map_name = LaunchConfiguration('map_name').perform(context)
+    robot_type = LaunchConfiguration('robot_type').perform(context)
     map_location = LaunchConfiguration('map_location').perform(context)
-
-
+    config_path += "/" + robot_type +"_mid360.yaml"
+    print(config_path)
     static_map_to_odom_node =  Node(
             package='tf2_ros',
             executable='static_transform_publisher',
@@ -56,7 +57,7 @@ def generate_launch_description():
     package_path = get_package_share_directory('fast_lio')
     default_rviz_config_path = os.path.join(
         package_path, 'rviz', 'fastlio.rviz')
-    default_config_path = os.path.join(package_path, 'config', 'mid360.yaml')
+    default_config_path = os.path.join(package_path, 'config')
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='false',
         description='Use simulation (Gazebo) clock if true'
@@ -81,6 +82,10 @@ def generate_launch_description():
         'map_location', default_value='map',
         description='Map location'
     )
+    robot_type_arg = DeclareLaunchArgument(
+        'robot_type', default_value='go2',
+        description='robot_type'
+    )
 
     return LaunchDescription([
         declare_use_sim_time_cmd,
@@ -89,6 +94,7 @@ def generate_launch_description():
         declare_rviz_config_path_cmd,
         declare_map_name_arg,
         declare_map_location_arg,
+        robot_type_arg,
         OpaqueFunction(function=launch_setup)
     ])
  
