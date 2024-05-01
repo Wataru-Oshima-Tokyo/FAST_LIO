@@ -22,6 +22,10 @@ def launch_setup(context, *args, **kwargs):
     robot_type = LaunchConfiguration('robot_type').perform(context)
     map_location = LaunchConfiguration('map_location').perform(context)
     config_path += "/" + robot_type +"_mid360.yaml"
+    map_dir = os.path.join(map_location, map_name)
+        # Check if graph_dir does not exist and create it
+    if not os.path.exists(map_dir):
+        os.makedirs(map_dir, exist_ok=True)  # Create the directory if it doesn't exist
     print(config_path)
     static_map_to_odom_node =  Node(
             package='tf2_ros',

@@ -920,7 +920,7 @@ public:
         this->get_parameter_or<std::string>("robot_frame", robot_frame_, "base_link");
         this->get_parameter_or<std::string>("map_frame", map_frame_, "map");
 
-        map_file_path += "/" + map_name + ".pcd";
+        map_file_path += "/" + map_name + "/GlobalMap.pcd";
         RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
         RCLCPP_INFO(this->get_logger(), "map name :%s", map_name.c_str());
 
