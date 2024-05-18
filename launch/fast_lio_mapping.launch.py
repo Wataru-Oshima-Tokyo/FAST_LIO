@@ -10,10 +10,6 @@ from launch.conditions import IfCondition
 from launch_ros.actions import Node, SetUseSimTime
 
 def launch_setup(context, *args, **kwargs):
-    
-    
-
-
     use_sim_time = LaunchConfiguration('use_sim_time')
     config_path = LaunchConfiguration('config_path').perform(context)
     rviz_use = LaunchConfiguration('rviz')

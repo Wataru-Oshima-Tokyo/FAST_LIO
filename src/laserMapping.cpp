@@ -620,10 +620,10 @@ void publish_map(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub
     // pubLaserCloudMap->publish(laserCloudMap);
 }
 
-void save_to_pcd()
+void save_to_pcd(std::string& map_file_path_)
 {
     pcl::PCDWriter pcd_writer;
-    pcd_writer.writeBinary(map_file_path, *pcl_wait_pub);
+    pcd_writer.writeBinary(map_file_path_, *pcl_wait_pub);
 }
 
 template<typename T>
@@ -920,7 +920,6 @@ public:
         this->get_parameter_or<std::string>("robot_frame", robot_frame_, "base_link");
         this->get_parameter_or<std::string>("map_frame", map_frame_, "map");
 
-        map_file_path += "/" + map_name + "/GlobalMap.pcd";
         RCLCPP_INFO(this->get_logger(), "p_pre->lidar_type %d", p_pre->lidar_type);
         RCLCPP_INFO(this->get_logger(), "map name :%s", map_name.c_str());
 
@@ -997,7 +996,7 @@ public:
         auto map_period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0));
         map_pub_timer_ = rclcpp::create_timer(this, this->get_clock(), map_period_ms, std::bind(&LaserMappingNode::map_publish_callback, this));
 
-        map_save_srv_ = this->create_service<std_srvs::srv::Trigger>("/fast_lio/save_map", std::bind(&LaserMappingNode::map_save_callback, this, std::placeholders::_1, std::placeholders::_2));
+        map_save_srv_ = this->create_service<std_srvs::srv::Trigger>("/lio/save_map", std::bind(&LaserMappingNode::map_save_callback, this, std::placeholders::_1, std::placeholders::_2));
 
         RCLCPP_INFO(this->get_logger(), "Node init finished.");
     }
@@ -1170,10 +1169,13 @@ private:
 
     void map_save_callback(std_srvs::srv::Trigger::Request::ConstSharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
     {
-        RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path.c_str());
+        std::string map_file_dir = map_file_path + "/" + map_name;
+        int unused = system((std::string("mkdir -p ") + map_file_dir).c_str());
+        std::string map_file_path_ = map_file_dir + "/GlobalMap.pcd";
+        RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path_.c_str());
         if (pcd_save_en)
         {
-            save_to_pcd();
+            save_to_pcd(map_file_path_);
             res->success = true;
             res->message = "Map saved.";
         }
