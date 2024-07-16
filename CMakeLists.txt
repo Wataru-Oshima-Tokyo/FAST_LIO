@@ -63,6 +63,7 @@ find_package(livox_ros_driver2 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)  # This is critical for tf2::doTransform
+find_package(techshare_ros_pkg2 REQUIRED)
 
 set(dependencies
   rclcpp
@@ -78,6 +79,7 @@ set(dependencies
   livox_ros_driver2
   tf2_ros
   tf2_geometry_msgs
+  techshare_ros_pkg2
 )
 
 # Thirdparty libraries
