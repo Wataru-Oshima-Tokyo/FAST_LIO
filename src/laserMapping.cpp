@@ -66,6 +66,8 @@
 #include "preprocess.h"
 #include <ikd-Tree/ikd_Tree.h>
 #include "techshare_ros_pkg2/msg/cloud_info.hpp"
+#include "techshare_ros_pkg2/msg/floor_info.hpp"
+#include <boost/filesystem.hpp>
 
 #define INIT_TIME           (0.1)
 #define LASER_POINT_COV     (0.001)
@@ -102,7 +104,9 @@ bool   point_selected_surf[100000] = {0};
 bool   lidar_pushed, flg_first_scan = true, flg_exit = false, flg_EKF_inited;
 bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false;
 bool    is_first_lidar = true;
-
+int building_number;
+int floor_level;
+int save_counter =0;
 vector<vector<int>>  pointSearchInd_surf; 
 vector<BoxPointType> cub_needrm;
 vector<PointVector>  Nearest_Points; 
@@ -359,6 +363,12 @@ void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::UniquePtr msg)
     s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
     mtx_buffer.unlock();
     sig_buffer.notify_all();
+}
+
+void floor_info_callback(const techshare_ros_pkg2::msg::FloorInfo::SharedPtr msg)
+{
+    building_number = msg->building_number;
+    floor_level = msg->floor_level;
 }
 
 void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
@@ -889,7 +899,11 @@ public:
         this->declare_parameter<std::string>("common.mapFrame", "map");
         this->declare_parameter<std::string>("common.odometryFrame", "fast_lio_odom");
         this->declare_parameter<std::string>("common.robotFrame", "base_link");
-        
+        this->declare_parameter<int>("common.startBuildingNumber", 0);
+        this->declare_parameter<int>("common.startFloorLevel", 0);
+        this->get_parameter("common.startBuildingNumber", building_number);
+        this->get_parameter("common.startFloorLevel", floor_level);
+
         this->declare_parameter<vector<double>>("fast_lio_config.mapping.extrinsic_T", vector<double>());
         this->declare_parameter<vector<double>>("fast_lio_config.mapping.extrinsic_R", vector<double>());
 
@@ -991,6 +1005,8 @@ public:
             sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, 20, standard_pcl_cbk);
         }
         sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 10, imu_cbk);
+        subFloorInfo = this->create_subscription<techshare_ros_pkg2::msg::FloorInfo>(
+            "halna/mapping/level", 8, floor_info_callback);
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/halna/mapping/cloud_registered_raw", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/current_scan", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
@@ -1184,23 +1200,54 @@ private:
         if (map_pub_en) publish_map(pubLaserCloudMap_);
     }
 
+
+
     void map_save_callback(std_srvs::srv::Trigger::Request::ConstSharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
     {
-        std::string map_file_dir = map_file_path + "/" + map_name;
-        int unused = system((std::string("mkdir -p ") + map_file_dir).c_str());
-        std::string map_file_path_ = map_file_dir + "/GlobalMap.pcd";
-        RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path_.c_str());
-        if (pcd_save_en)
-        {
-            save_to_pcd(map_file_path_);
+        std::string save_dir = map_file_path + "/" + map_name + "/floor_" + std::to_string(building_number) +"_" + std::to_string(floor_level) +"/";        
+        int unused = system((std::string("mkdir -p ") + save_dir).c_str());
+        std::string filePath = save_dir +  "/GlobalMap.pcd";
+        std::string message="";
+        if (boost::filesystem::exists(filePath)) {
+            filePath = save_dir + "/GlobalMap_new.pcd";
+            if (boost::filesystem::exists(filePath)) {
+                // Rename the existing file
+                std::string newFileName = save_dir + "/GlobalMap_" + std::to_string(save_counter) + ".pcd";
+                boost::filesystem::rename(filePath, newFileName);
+                save_counter++;
+            }
+            message = "A new map for "  +  map_name + " is saved separately since there is a pre-built map already";
+        }else{
+            
+            message = "The first map for " + map_name + "is saved as GlobalMap";
+        }
+        
+        if (pcd_save_en) {
+            save_to_pcd(filePath);
+            std::cout << "File " << filePath << " saved successfully." << std::endl;
             res->success = true;
-            res->message = "Map saved.";
-        }
-        else
-        {
+        } else {
+            std::cerr << "Error saving file " << filePath << std::endl;
             res->success = false;
-            res->message = "Map save disabled.";
         }
+
+        res->message = message;
+
+        // std::string map_file_dir = map_file_path + "/" + map_name;
+        // int unused = system((std::string("mkdir -p ") + map_file_dir).c_str());
+        // std::string map_file_path_ = map_file_dir + "/floor_0_0" +"/GlobalMap.pcd";
+        // RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path_.c_str());
+        // if (pcd_save_en)
+        // {
+        //     save_to_pcd(map_file_path_);
+        //     res->success = true;
+        //     res->message = "Map saved.";
+        // }
+        // else
+        // {
+        //     res->success = false;
+        //     res->message = "Map save disabled.";
+        // }
     }
 
 private:
@@ -1209,6 +1256,8 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudEffect_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap_;
     rclcpp::Publisher<techshare_ros_pkg2::msg::CloudInfo>::SharedPtr pubCloudInfo_;
+    rclcpp::Subscription<techshare_ros_pkg2::msg::FloorInfo>::SharedPtr subFloorInfo;
+
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomToMap_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
