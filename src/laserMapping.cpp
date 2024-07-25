@@ -1209,17 +1209,23 @@ private:
         std::string filePath = save_dir +  "/GlobalMap.pcd";
         std::string message="";
         if (boost::filesystem::exists(filePath)) {
-            filePath = save_dir + "/GlobalMap_new.pcd";
-            if (boost::filesystem::exists(filePath)) {
-                // Rename the existing file
-                std::string newFileName = save_dir + "/GlobalMap_" + std::to_string(save_counter) + ".pcd";
-                boost::filesystem::rename(filePath, newFileName);
+            std::string newFileName = save_dir + "/GlobalMap_" + std::to_string(save_counter) + ".pcd";
+            while (boost::filesystem::exists(newFileName) && save_counter <100){
+                newFileName = save_dir + "/GlobalMap_" + std::to_string(save_counter) + ".pcd";
                 save_counter++;
             }
-            message = "A new map for "  +  map_name + " is saved separately since there is a pre-built map already";
-        }else{
-            
-            message = "The first map for " + map_name + "is saved as GlobalMap";
+            if (save_counter <=100){
+                boost::filesystem::rename(filePath, newFileName);
+                message = "A new map for " + map_name+ " is saved as GlobalMap and a pre-built map is saved separately";
+
+            }else{
+                message = "There is more than 100 files in the directory";
+                res->success = false;
+                res->message = message;
+                return;
+            }
+        } else {
+            message = "The first map for " + map_name + " is saved as GlobalMap";
         }
         
         if (pcd_save_en) {
@@ -1233,21 +1239,7 @@ private:
 
         res->message = message;
 
-        // std::string map_file_dir = map_file_path + "/" + map_name;
-        // int unused = system((std::string("mkdir -p ") + map_file_dir).c_str());
-        // std::string map_file_path_ = map_file_dir + "/floor_0_0" +"/GlobalMap.pcd";
-        // RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path_.c_str());
-        // if (pcd_save_en)
-        // {
-        //     save_to_pcd(map_file_path_);
-        //     res->success = true;
-        //     res->message = "Map saved.";
-        // }
-        // else
-        // {
-        //     res->success = false;
-        //     res->message = "Map save disabled.";
-        // }
+
     }
 
 private:
