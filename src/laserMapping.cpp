@@ -869,7 +869,7 @@ public:
         this->declare_parameter<bool>("fast_lio_config.publish.dense_publish_en", true);
         this->declare_parameter<bool>("fast_lio_config.publish.scan_bodyframe_pub_en", true);
         this->declare_parameter<int>("fast_lio_config.max_iteration", 4);
-        this->declare_parameter<string>("fast_lio_config.mapping.map_location", "/");
+        this->declare_parameter<string>("common.mapLocation", "/");
         this->declare_parameter<string>("common.mapName", "test");
         this->declare_parameter<string>("common.pointCloudTopic", "/livox/lidar");
         this->declare_parameter<string>("common.imuTopic", "/livox/imu");
@@ -914,7 +914,7 @@ public:
         this->get_parameter_or<bool>("fast_lio_config.publish.dense_publish_en", dense_pub_en, true);
         this->get_parameter_or<bool>("pfast_lio_config.ublish.scan_bodyframe_pub_en", scan_body_pub_en, true);
         this->get_parameter_or<int>("fast_lio_config.max_iteration", NUM_MAX_ITERATIONS, 4);
-        this->get_parameter_or<string>("fast_lio_config.mapping.map_location", map_file_path, "/");
+        this->get_parameter_or<string>("common.mapLocation", map_file_path, "/");
         this->get_parameter_or<string>("common.mapName", map_name, "test");
         this->get_parameter_or<string>("common.pointCloudTopic", lid_topic, "/livox/lidar");
         this->get_parameter_or<string>("common.imuTopic", imu_topic,"/livox/imu");
