@@ -656,29 +656,7 @@ void set_posestamp(T & out)
     
 }
 
-void publish_odom_To_map(
-    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pbu_odom,
-    std::unique_ptr<tf2_ros::Buffer>& tf_b ){
-    nav_msgs::msg::Odometry odom_transformed;
-    geometry_msgs::msg::TransformStamped transform_stamped;
-    geometry_msgs::msg::PoseStamped odom_pose;
-    odom_pose.pose = odomAftMapped.pose.pose;
-    odom_pose.header = odomAftMapped.header;
-    geometry_msgs::msg::PoseStamped map_pose;
-    try {
-        transform_stamped = tf_b->lookupTransform(map_frame_, odom_pose.header.frame_id,
-                                                    odom_pose.header.stamp, rclcpp::Duration::from_seconds(1.0));
-        tf2::doTransform(odom_pose, map_pose, transform_stamped);
-    } catch (tf2::TransformException &ex) {
-        // RCLCPP_WARN(this->get_logger(), "Could not transform cloud: %s", ex.what());
-        return;
-    }
-    // Set the header of the transformed odometry message
-    odom_transformed.header.stamp = odomAftMapped.header.stamp;
-    odom_transformed.header.frame_id = map_frame_;
-    odom_transformed.pose.pose = map_pose.pose;
-    pbu_odom->publish(odom_transformed);
-}
+
 
 
 void publish_odometry(
@@ -704,18 +682,6 @@ void publish_odometry(
         odomAftMapped.pose.covariance[i*6 + 5] = P(k, 2);
     }
 
-    geometry_msgs::msg::TransformStamped trans;
-    trans.header.frame_id = odom_frame_;
-    trans.header.stamp = get_ros_time(lidar_end_time);
-    trans.child_frame_id = robot_frame_;
-    trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
-    trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
-    trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
-    trans.transform.rotation.w = odomAftMapped.pose.pose.orientation.w;
-    trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
-    trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
-    trans.transform.rotation.z = odomAftMapped.pose.pose.orientation.z;
-    // tf_br->sendTransform(trans);
 }
 
 void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
@@ -1015,9 +981,6 @@ public:
         pubOdomAftMapped_ = this->create_publisher<nav_msgs::msg::Odometry>("/halna/odometry/robot_odom", 20);
         pubOdomToMap_ = this->create_publisher<nav_msgs::msg::Odometry>("/lio/odom_to_map", 20);
         pubPath_ = this->create_publisher<nav_msgs::msg::Path>("/lio/path", 20);
-        tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-        tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
         //------------------------------------------------------------------------------------------------------
         auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0));
@@ -1146,7 +1109,6 @@ private:
 
             /******* Publish odometry *******/
             publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
-            //publish_odom_To_map(pubOdomToMap_, tf_buffer_);
 
             /*** add the feature points to map kdtree ***/
             t3 = omp_get_wtime();
@@ -1257,9 +1219,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_pcl_pc_;
     rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_pcl_livox_;
 
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-    std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr map_pub_timer_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr map_save_srv_;
