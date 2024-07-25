@@ -660,8 +660,7 @@ void set_posestamp(T & out)
 
 
 void publish_odometry(
-    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped, 
-    std::unique_ptr<tf2_ros::TransformBroadcaster> & tf_br)
+    const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped)
 {
     odomAftMapped.header.frame_id = odom_frame_;
     odomAftMapped.child_frame_id = robot_frame_;
@@ -1108,7 +1107,7 @@ private:
             double t_update_end = omp_get_wtime();
 
             /******* Publish odometry *******/
-            publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
+            publish_odometry(pubOdomAftMapped_);
 
             /*** add the feature points to map kdtree ***/
             t3 = omp_get_wtime();
