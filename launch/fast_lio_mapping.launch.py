@@ -27,7 +27,7 @@ def launch_setup(context, *args, **kwargs):
             package='tf2_ros',
             executable='static_transform_publisher',
             name='world_to_map',
-            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'lio_odom']
+            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'odom']
     )
 
     fast_lio_node = Node(

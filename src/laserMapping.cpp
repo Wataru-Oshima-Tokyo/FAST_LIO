@@ -975,7 +975,7 @@ public:
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/halna/mapping/cloud_registered_raw", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/current_scan", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
-        pubLaserCloudMap_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/keyframe_scan", 20);
+        pubLaserCloudMap_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/world_map", 20);
         pubCloudInfo_ = this->create_publisher<techshare_ros_pkg2::msg::CloudInfo>("halna/feature/cloud_info", 20);
         pubOdomAftMapped_ = this->create_publisher<nav_msgs::msg::Odometry>("/halna/odometry/robot_odom", 20);
         pubOdomToMap_ = this->create_publisher<nav_msgs::msg::Odometry>("/lio/odom_to_map", 20);
